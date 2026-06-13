@@ -89,7 +89,7 @@ const createSnippet = () => {
     };
 
     // function to discard all changes
-    const handleDiscoard = () => {
+    const handleDiscard = () => {
         setTitle("");
         setSelectedLanguage('JavaScript');
         setScreenshotUri(null);
@@ -97,8 +97,7 @@ const createSnippet = () => {
         setCode('');
 
         router.back();
-    }
-
+    };
 
     return (
         <SafeAreaView style={styles.container} edges={["top"]}>
@@ -249,7 +248,7 @@ const createSnippet = () => {
                     <Text style={styles.saveText}>Save Snippet</Text>
                 </Pressable>
 
-                <Pressable onPress={handleDiscoard} style={styles.discardButton}>
+                <Pressable onPress={handleDiscard} style={styles.discardButton}>
                     <Text style={styles.discardText}>Discard Draft</Text>
                 </Pressable>
             </ScrollView>

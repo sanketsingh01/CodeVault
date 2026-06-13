@@ -1,14 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
+import { File, Paths } from "expo-file-system";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import * as Sharing from "expo-sharing";
 import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Border, Colors, Radius, Shadows, Spacing, Typography } from "@/constants/theme";
-import { getLanguageStyle, parseTags, type Snippet } from "@/data/snippetsData";
+import { buildJson, buildMarkdown, buildTxt, getLanguageStyle, parseTags, type Snippet } from "@/data/snippetsData";
 import { useFocusEffect } from "expo-router";
 
 import SyntaxHighlighter from "react-native-syntax-highlighter";
@@ -16,17 +18,32 @@ import githubStyle from "react-syntax-highlighter/styles/hljs/github";
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
+type ExportFormat = "txt" | "markdown" | "json";
+
 const AI_ACTIONS: { key: string; label: string; icon: IconName; bg: string }[] = [
     { key: "explain", label: "Explain", icon: "sparkles", bg: Colors.primaryContainer },
     { key: "summarize", label: "Summarize", icon: "reader", bg: Colors.secondaryContainer },
     { key: "improve", label: "Improve", icon: "build", bg: Colors.tertiaryContainer },
 ];
 
-const EXPORT_ACTIONS: { key: string; label: string; icon: IconName }[] = [
-    { key: "copy", label: "Copy", icon: "copy-outline" },
-    { key: "markdown", label: "Markdown", icon: "logo-markdown" },
-    { key: "image", label: "Image", icon: "image-outline" },
+const EXPORT_ACTIONS: {
+    key: ExportFormat;
+    label: string;
+    icon: IconName;
+    ext: string;
+    mimeType: string;
+    uti: string;
+}[] = [
+    { key: "txt", label: ".txt", icon: "document-text", ext: "txt", mimeType: "text/plain", uti: "public.plain-text" },
+    { key: "markdown", label: "Markdown", icon: "logo-markdown", ext: "md", mimeType: "text/markdown", uti: "net.daringfireball.markdown" },
+    { key: "json", label: "JSON", icon: "code-slash", ext: "json", mimeType: "application/json", uti: "public.json" },
 ];
+
+const buildExportContent = (format: ExportFormat, snippet: Snippet) => {
+    if (format === "txt") return buildTxt(snippet);
+    if (format === "markdown") return buildMarkdown(snippet);
+    return buildJson(snippet);
+};
 
 const SnippetDetail = () => {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -38,6 +55,7 @@ const SnippetDetail = () => {
     const [copied, setCopied] = useState(false);
     const [saving, setSaving] = useState(false);
     const [editing, setEditing] = useState(false);
+    const [exporting, setExporting] = useState<ExportFormat | null>(null);
 
     const loadSnippet = useCallback(async () => {
         const row = await db.getFirstAsync<Snippet>(
@@ -78,6 +96,45 @@ const SnippetDetail = () => {
     const handleCancelEdit = () => {
         setCode(snippet?.code_content ?? "");
         setEditing(false);
+    };
+
+    const handleExport = async (action: (typeof EXPORT_ACTIONS)[number]) => {
+        if (!snippet || exporting) return;
+
+        const current: Snippet = { ...snippet, code_content: code };
+        const content = buildExportContent(action.key, current);
+
+        const safeName =
+            snippet.title
+                .replace(/[^a-z0-9]+/gi, "_")
+                .replace(/^_+|_+$/g, "")
+                .toLowerCase() || "snippet";
+
+        setExporting(action.key);
+        try {
+            const file = new File(Paths.cache, `${safeName}.${action.ext}`);
+            if (file.exists) file.delete();
+            file.create();
+            file.write(content);
+
+            if (!(await Sharing.isAvailableAsync())) {
+                Alert.alert("Sharing unavailable", "Sharing is not available on this device.");
+                return;
+            }
+
+            await Sharing.shareAsync(file.uri, {
+                mimeType: action.mimeType,
+                UTI: action.uti,
+                dialogTitle: `Export ${snippet.title}`,
+            });
+        } catch (error) {
+            Alert.alert(
+                "Export failed",
+                error instanceof Error ? error.message : "Something went wrong while exporting."
+            );
+        } finally {
+            setExporting(null);
+        }
     };
 
     const isDirty = snippet !== null && code !== snippet.code_content;
@@ -255,14 +312,27 @@ const SnippetDetail = () => {
                     </Text>
                 </View>
 
-                {/* Export As (functionality coming later) */}
+                {/* Export As */}
                 <Text style={styles.sectionTitle}>Export As</Text>
                 <View style={styles.actionRow}>
                     {EXPORT_ACTIONS.map((action) => (
-                        <View key={action.key} style={styles.exportButton}>
-                            <Ionicons name={action.icon} size={20} color={Colors.onSurface} />
+                        <Pressable
+                            key={action.key}
+                            style={({ pressed }) => [
+                                styles.exportButton,
+                                exporting !== null && styles.exportButtonDisabled,
+                                pressed && styles.exportButtonPressed,
+                            ]}
+                            onPress={() => handleExport(action)}
+                            disabled={exporting !== null}
+                        >
+                            {exporting === action.key ? (
+                                <ActivityIndicator size="small" color={Colors.onSurface} />
+                            ) : (
+                                <Ionicons name={action.icon} size={20} color={Colors.onSurface} />
+                            )}
                             <Text style={styles.exportText}>{action.label}</Text>
-                        </View>
+                        </Pressable>
                     ))}
                 </View>
             </ScrollView>
@@ -488,6 +558,13 @@ const styles = StyleSheet.create({
         borderColor: Colors.outlineBlack,
         backgroundColor: Colors.surfaceContainerLowest,
         ...Shadows.sticker,
+    },
+    exportButtonPressed: {
+        transform: [{ translateX: 2 }, { translateY: 2 }],
+        ...Shadows.pressed,
+    },
+    exportButtonDisabled: {
+        opacity: 0.6,
     },
     exportText: {
         ...Typography.labelSm,

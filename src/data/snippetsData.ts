@@ -12,6 +12,7 @@ export type Snippet = {
 };
 
 type IconName = keyof typeof Ionicons.glyphMap;
+export const buildTxt = (s: Snippet) => s.code_content;
 
 const LANGUAGE_STYLE: Record<string, { icon: IconName; bg: string }> = {
     javascript: { icon: 'logo-javascript', bg: Colors.primaryContainer },
@@ -34,3 +35,27 @@ export const parseTags = (tags: string | null) =>
         .split(',')
         .map((t) => t.trim())
         .filter(Boolean);
+
+export const buildMarkdown = (s: Snippet) => {
+    const tags = parseTags(s.tags).map((t) => `\`#${t}\``).join(" ");
+    return [
+        `# ${s.title}`,
+        tags ? `\n${tags}` : "",
+        `\n\n\`\`\`${s.language.toLowerCase()}`,
+        s.code_content,
+        "```",
+    ].join("\n");
+};
+
+export const buildJson = (s: Snippet) =>
+    JSON.stringify(
+        {
+            title: s.title,
+            language: s.language,
+            tags: parseTags(s.tags),
+            code: s.code_content,
+            is_favorite: !!s.is_favorite,
+        },
+        null,
+        2
+    );
