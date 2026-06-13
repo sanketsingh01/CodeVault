@@ -39,6 +39,7 @@ export default function RootLayout() {
           name="createSnippet"
           options={{ presentation: "modal" }}
         />
+        <Stack.Screen name="snippet/[id]" />
       </Stack>
     </SQLiteProvider>
   );

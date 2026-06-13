@@ -1,17 +1,31 @@
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, View } from "react-native";
+import { useRouter } from "expo-router";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Border, Colors, Radius, Shadows, Spacing, Typography } from "@/constants/theme";
-import { CHIP_COLORS, getLanguageStyle, parseTags, type Snippet } from '@/data/snippetsData';
+import { getLanguageStyle, parseTags, type Snippet } from '@/data/snippetsData';
 
 const SnippetCard = ({ item }: { item: Snippet }) => {
+    const router = useRouter();
     const { icon, bg } = getLanguageStyle(item.language);
     const tags = parseTags(item.tags);
 
     return (
-        <View style={styles.card}>
+        <Pressable
+            onPress={() =>
+                router.push({
+                    pathname: "/snippet/[id]",
+                    params: { id: String(item.id) },
+                })
+            }
+            style={({ pressed }) => [
+                styles.card,
+                { backgroundColor: bg },
+                pressed && styles.cardPressed,
+            ]}
+        >
             <View style={styles.cardTop}>
-                <View style={[styles.iconTile, { backgroundColor: bg }]}>
+                <View style={styles.iconTile}>
                     <Ionicons name={icon} size={26} color={Colors.onSurface} />
                 </View>
 
@@ -35,20 +49,14 @@ const SnippetCard = ({ item }: { item: Snippet }) => {
 
             {tags.length > 0 && (
                 <View style={styles.tagRow}>
-                    {tags.map((tag, index) => (
-                        <View
-                            key={tag}
-                            style={[
-                                styles.chip,
-                                { backgroundColor: CHIP_COLORS[index % CHIP_COLORS.length] },
-                            ]}
-                        >
+                    {tags.map((tag) => (
+                        <View key={tag} style={styles.chip}>
                             <Text style={styles.chipText}>{tag}</Text>
                         </View>
                     ))}
                 </View>
             )}
-        </View>
+        </Pressable>
     );
 };
 
@@ -56,13 +64,16 @@ export default SnippetCard;
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: Colors.surfaceContainerLowest,
         borderRadius: Radius.lg,
         borderWidth: Border.default,
         borderColor: Colors.outlineBlack,
         padding: Spacing.innerPadding + 2,
         gap: Spacing.innerPadding,
         ...Shadows.sticker,
+    },
+    cardPressed: {
+        transform: [{ translateX: 2 }, { translateY: 2 }],
+        ...Shadows.pressed,
     },
     cardTop: {
         flexDirection: 'row',
@@ -77,6 +88,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         borderWidth: Border.default,
         borderColor: Colors.outlineBlack,
+        backgroundColor: Colors.surfaceContainerLowest,
     },
     cardTitleCol: {
         flex: 1,
@@ -91,7 +103,8 @@ const styles = StyleSheet.create({
     cardSubtitle: {
         ...Typography.bodyMd,
         fontSize: 14,
-        color: Colors.onSurfaceVariant,
+        color: Colors.onSurface,
+        opacity: 0.7,
     },
     bookmark: {
         width: 36,
@@ -114,6 +127,7 @@ const styles = StyleSheet.create({
         borderRadius: Radius.full,
         borderWidth: Border.thin,
         borderColor: Colors.outlineBlack,
+        backgroundColor: Colors.surfaceContainerLowest,
     },
     chipText: {
         ...Typography.labelSm,
