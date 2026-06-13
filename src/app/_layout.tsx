@@ -6,6 +6,9 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 
+import { migrateDbIfNeeded } from "@/db/database";
+import { SQLiteProvider } from "expo-sqlite";
+
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -28,6 +31,15 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }} />
+    <SQLiteProvider databaseName="codevault.db" onInit={migrateDbIfNeeded}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="createSnippet"
+          options={{ presentation: "modal" }}
+        />
+      </Stack>
+    </SQLiteProvider>
   );
 }
