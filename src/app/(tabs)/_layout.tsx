@@ -1,24 +1,30 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { Border, Colors, Fonts, Radius, Shadows } from "@/constants/theme";
+import { Border, Fonts, Radius, Shadows, type Palette } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
 function TabBarIcon({ name, focused }: { name: IconName; focused: boolean }) {
+  const { colors: Colors } = useTheme();
+  const styles = useMemo(() => makeStyles(Colors), [Colors]);
   return (
     <View style={[styles.iconWrapper, focused && styles.iconWrapperActive]}>
       <Ionicons
         name={name}
         size={22}
-        color={focused ? Colors.onPrimary : Colors.onSurface}
+        color={focused ? Colors.onPrimaryContainer : Colors.onSurface}
       />
     </View>
   );
 }
 
 export default function TabsLayout() {
+  const { colors: Colors } = useTheme();
+  const styles = useMemo(() => makeStyles(Colors), [Colors]);
   return (
     <Tabs
       screenOptions={{
@@ -66,13 +72,13 @@ export default function TabsLayout() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors: Palette) => StyleSheet.create({
   tabBar: {
     backgroundColor: Colors.surfaceContainerLowest,
     borderTopWidth: Border.thick,
     borderTopColor: Colors.outlineBlack,
-    height: 76,
-    paddingTop: 8,
+    height: 60,
+    paddingTop: 4,
     paddingBottom: 8,
   },
   tabItem: {

@@ -1,10 +1,11 @@
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Border, Colors, Radius, Shadows, Spacing, Typography } from '@/constants/theme';
+import { Border, Radius, Shadows, Spacing, Typography, type Palette } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Link, useFocusEffect, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import SnippetCard from '@/components/snippetCard';
@@ -18,6 +19,8 @@ type Stats = {
 const index = () => {
     const router = useRouter();
     const db = useSQLiteContext();
+    const { colors: Colors } = useTheme();
+    const styles = useMemo(() => makeStyles(Colors), [Colors]);
 
     const [stats, setStats] = useState<Stats>({ snippets: 0, screenshots: 0 });
     const [data, setData] = useState<Snippet[]>([]);
@@ -150,7 +153,7 @@ const index = () => {
 
 export default index
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors: Palette) => StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: "flex-start",

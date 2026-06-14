@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/theme';
+import { lightColors, type Palette, type PaletteKey } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 
 export type Snippet = {
@@ -14,21 +14,23 @@ export type Snippet = {
 type IconName = keyof typeof Ionicons.glyphMap;
 export const buildTxt = (s: Snippet) => s.code_content;
 
-const LANGUAGE_STYLE: Record<string, { icon: IconName; bg: string }> = {
-    javascript: { icon: 'logo-javascript', bg: Colors.primaryContainer },
-    typescript: { icon: 'code-slash', bg: Colors.secondaryContainer },
-    python: { icon: 'logo-python', bg: Colors.tertiaryContainer },
-    java: { icon: 'cafe', bg: Colors.primaryFixedDim },
-    'c++': { icon: 'hardware-chip', bg: Colors.secondaryFixedDim },
+const LANGUAGE_STYLE: Record<string, { icon: IconName; bg: PaletteKey }> = {
+    javascript: { icon: 'logo-javascript', bg: 'primaryContainer' },
+    typescript: { icon: 'code-slash', bg: 'secondaryContainer' },
+    python: { icon: 'logo-python', bg: 'tertiaryContainer' },
+    java: { icon: 'cafe', bg: 'primaryFixedDim' },
+    'c++': { icon: 'hardware-chip', bg: 'secondaryFixedDim' },
 };
 
-export const getLanguageStyle = (language: string) =>
-    LANGUAGE_STYLE[language.trim().toLowerCase()] ?? {
-        icon: 'code-slash' as IconName,
-        bg: Colors.surfaceContainerHighest,
+export const getLanguageStyle = (language: string, colors: Palette = lightColors) => {
+    const style = LANGUAGE_STYLE[language.trim().toLowerCase()];
+    return {
+        icon: style?.icon ?? ('code-slash' as IconName),
+        bg: colors[style?.bg ?? 'surfaceContainerHighest'],
     };
+};
 
-export const CHIP_COLORS = [Colors.tertiaryContainer, Colors.secondaryContainer];
+export const CHIP_COLORS = [lightColors.tertiaryContainer, lightColors.secondaryContainer];
 
 export const parseTags = (tags: string | null) =>
     (tags ?? '')

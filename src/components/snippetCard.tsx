@@ -1,13 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { Border, Colors, Radius, Shadows, Spacing, Typography } from "@/constants/theme";
+import { Border, Radius, Shadows, Spacing, Typography, type Palette } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { getLanguageStyle, parseTags, type Snippet } from '@/data/snippetsData';
 
 const SnippetCard = ({ item }: { item: Snippet }) => {
     const router = useRouter();
-    const { icon, bg } = getLanguageStyle(item.language);
+    const { colors: Colors } = useTheme();
+    const styles = useMemo(() => makeStyles(Colors), [Colors]);
+    const { icon, bg } = getLanguageStyle(item.language, Colors);
     const tags = parseTags(item.tags);
 
     return (
@@ -62,7 +66,7 @@ const SnippetCard = ({ item }: { item: Snippet }) => {
 
 export default SnippetCard;
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors: Palette) => StyleSheet.create({
     card: {
         borderRadius: Radius.lg,
         borderWidth: Border.default,

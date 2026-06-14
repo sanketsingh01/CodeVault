@@ -1,10 +1,14 @@
 import { useRouter } from "expo-router";
+import { useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { Border, Colors, Radius, Shadows, Spacing, Typography } from "@/constants/theme";
+import { Border, Radius, Shadows, Spacing, Typography, type Palette } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function Index() {
   const router = useRouter();
+  const { colors: Colors } = useTheme();
+  const styles = useMemo(() => makeStyles(Colors), [Colors]);
 
   const handlePush = () => {
     router.push("/(tabs)");
@@ -30,7 +34,7 @@ export default function Index() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors: Palette) => StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",

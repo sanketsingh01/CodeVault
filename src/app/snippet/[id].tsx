@@ -5,25 +5,27 @@ import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
 import { useSQLiteContext } from "expo-sqlite";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Border, Colors, Radius, Shadows, Spacing, Typography } from "@/constants/theme";
+import { Border, Radius, Shadows, Spacing, Typography, type Palette, type PaletteKey } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { buildJson, buildMarkdown, buildTxt, getLanguageStyle, parseTags, type Snippet } from "@/data/snippetsData";
 import { useFocusEffect } from "expo-router";
 
 import SyntaxHighlighter from "react-native-syntax-highlighter";
+import atomOneDark from "react-syntax-highlighter/styles/hljs/atom-one-dark";
 import githubStyle from "react-syntax-highlighter/styles/hljs/github";
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
 type ExportFormat = "txt" | "markdown" | "json";
 
-const AI_ACTIONS: { key: string; label: string; icon: IconName; bg: string }[] = [
-    { key: "explain", label: "Explain", icon: "sparkles", bg: Colors.primaryContainer },
-    { key: "summarize", label: "Summarize", icon: "reader", bg: Colors.secondaryContainer },
-    { key: "improve", label: "Improve", icon: "build", bg: Colors.tertiaryContainer },
+const AI_ACTIONS: { key: string; label: string; icon: IconName; bg: PaletteKey }[] = [
+    { key: "explain", label: "Explain", icon: "sparkles", bg: "primaryContainer" },
+    { key: "summarize", label: "Summarize", icon: "reader", bg: "secondaryContainer" },
+    { key: "improve", label: "Improve", icon: "build", bg: "tertiaryContainer" },
 ];
 
 const EXPORT_ACTIONS: {
@@ -49,6 +51,8 @@ const SnippetDetail = () => {
     const { id } = useLocalSearchParams<{ id: string }>();
     const db = useSQLiteContext();
     const router = useRouter();
+    const { mode, colors: Colors } = useTheme();
+    const styles = useMemo(() => makeStyles(Colors), [Colors]);
 
     const [snippet, setSnippet] = useState<Snippet | null>(null);
     const [code, setCode] = useState("");
@@ -157,7 +161,7 @@ const SnippetDetail = () => {
         );
     }
 
-    const { bg } = getLanguageStyle(snippet.language);
+    const { bg } = getLanguageStyle(snippet.language, Colors);
     const tags = parseTags(snippet.tags);
 
     return (
@@ -263,7 +267,7 @@ const SnippetDetail = () => {
                         <View style={styles.codeViewer}>
                             <SyntaxHighlighter
                                 language={snippet.language.toLowerCase()}
-                                style={githubStyle}
+                                style={mode === "dark" ? atomOneDark : githubStyle}
                                 customStyle={styles.highlighterContainer}
                                 fontFamily={Typography.codeBlock.fontFamily}
                                 fontSize={Typography.codeBlock.fontSize}
@@ -296,7 +300,7 @@ const SnippetDetail = () => {
                     {AI_ACTIONS.map((action) => (
                         <View
                             key={action.key}
-                            style={[styles.actionButton, { backgroundColor: action.bg }]}
+                            style={[styles.actionButton, { backgroundColor: Colors[action.bg] }]}
                         >
                             <Ionicons name={action.icon} size={18} color={Colors.onSurface} />
                             <Text style={styles.actionText}>{action.label}</Text>
@@ -342,7 +346,7 @@ const SnippetDetail = () => {
 
 export default SnippetDetail;
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors: Palette) => StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Colors.background,

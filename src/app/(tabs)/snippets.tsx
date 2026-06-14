@@ -1,4 +1,5 @@
-import { Border, Colors, Radius, Shadows, Spacing, Typography } from '@/constants/theme';
+import { Border, Radius, Shadows, Spacing, Typography, type Palette } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -12,6 +13,8 @@ import SnippetCard from '@/components/snippetCard';
 
 const snippets = () => {
   const db = useSQLiteContext();
+  const { colors: Colors } = useTheme();
+  const styles = useMemo(() => makeStyles(Colors), [Colors]);
 
   const [data, setData] = useState<Snippet[]>([]);
   const [query, setQuery] = useState('');
@@ -91,7 +94,7 @@ const snippets = () => {
 
 export default snippets;
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors: Palette) => StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'flex-start',

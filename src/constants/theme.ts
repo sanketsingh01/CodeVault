@@ -68,6 +68,67 @@ export const Colors = {
 } as const;
 
 /**
+ * A theme palette. Same shape as the light `Colors` token set, but with the
+ * values widened to `string` so the dark palette (with different hex values)
+ * is assignable to it.
+ */
+export type Palette = { [K in keyof typeof Colors]: string };
+export type PaletteKey = keyof typeof Colors;
+
+/** The default (light) palette. */
+export const lightColors: Palette = Colors;
+
+/**
+ * Dark variant of the "Retro Script" system.
+ *
+ * The page + card surfaces go dark, and anything that was black in the light
+ * theme (body text, headings, the neo-brutalist outlines) flips to white/cream
+ * so it stays visible. The vibrant accent containers are deepened so light text
+ * remains legible on top of them.
+ */
+export const darkColors: Palette = {
+  ...lightColors,
+
+  // Surfaces -> dark
+  surface: "#14120b",
+  surfaceDim: "#14120b",
+  surfaceBright: "#26241b",
+  surfaceContainerLowest: "#100e08",
+  surfaceContainerLow: "#1c1a12",
+  surfaceContainer: "#211e15",
+  surfaceContainerHigh: "#2b281e",
+  surfaceContainerHighest: "#363228",
+  background: "#14120b",
+  surfaceVariant: "#363228",
+
+  // Black text/icons -> white/cream
+  onSurface: "#f6f0e3",
+  onSurfaceVariant: "#d8c2b8",
+  onBackground: "#f6f0e3",
+
+  // Black outline -> light, so the sticker borders show on dark
+  outlineBlack: "#efe6d4",
+  outline: "#a48d83",
+  outlineVariant: "#5c4a43",
+
+  // Deepen the accent containers so light text/icons stay legible on them
+  primary: "#ab3500",
+  onPrimary: "#ffffff",
+  primaryContainer: "#ff6b35",
+  onPrimaryContainer: "#5f1900",
+  secondary: "#24657e",
+  onSecondary: "#e5d0d0",
+  secondaryContainer: "#2eb2f5",
+  tertiaryContainer: "#3c336e",
+  onTertiaryContainer: "#bcaeef",
+  primaryFixedDim: "#f6784e",
+  secondaryFixedDim: "#62ccfe",
+  tertiaryFixed: "#e5deff",
+  tertiaryFixedDim: "#7463e8",
+  onTertiaryFixedVariant: "#382a89",
+};
+
+/**
  * Font family names. These match the export names from the
  * @expo-google-fonts packages and the keys loaded via `useFonts`
  * in the root layout.

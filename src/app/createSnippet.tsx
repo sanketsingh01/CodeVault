@@ -2,9 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { Alert, FlatList, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Border, Colors, Radius, Shadows, Spacing, Typography } from "@/constants/theme";
+import { Border, Radius, Shadows, Spacing, Typography, type Palette } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { File, Paths } from "expo-file-system";
 import * as ImagePIcker from 'expo-image-picker';
@@ -12,6 +13,9 @@ import * as ImagePIcker from 'expo-image-picker';
 import { useSQLiteContext } from "expo-sqlite";
 
 const createSnippet = () => {
+    const { colors: Colors } = useTheme();
+    const styles = useMemo(() => makeStyles(Colors), [Colors]);
+
     const [title, setTitle] = useState<string>("");
     const [dropdownVisible, setDropdownVisible] = useState(false);
     const [selectedLanguage, setSelectedLanguage] = useState<string>('JavaScript');
@@ -258,7 +262,7 @@ const createSnippet = () => {
 
 export default createSnippet;
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors: Palette) => StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Colors.background,
@@ -369,28 +373,26 @@ const styles = StyleSheet.create({
     },
     dropdownMenu: {
         width: '80%',
-        backgroundColor: '#FFF', // Or your Colors.surface
-        borderRadius: 8,
+        backgroundColor: Colors.surfaceContainerLowest,
+        borderRadius: Radius.md,
+        borderWidth: Border.default,
+        borderColor: Colors.outlineBlack,
         paddingVertical: 10,
-        elevation: 5, // Shadow for Android
-        shadowColor: '#000', // Shadows for iOS
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
+        ...Shadows.sticker,
     },
     dropdownItem: {
         paddingVertical: 12,
         paddingHorizontal: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#EEE',
+        borderBottomWidth: Border.thin,
+        borderBottomColor: Colors.outlineVariant,
     },
     dropdownItemText: {
-        fontSize: 16,
-        color: '#333', // Or your Colors.onSurface
+        ...Typography.bodyMd,
+        color: Colors.onSurface,
     },
     selectedText: {
-        fontWeight: 'bold',
-        color: '#007AFF', // Your primary color
+        fontFamily: Typography.headlineMd.fontFamily,
+        color: Colors.primary,
     },
     tagsContainer: {
         flexDirection: "row",

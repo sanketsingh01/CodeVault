@@ -3,7 +3,7 @@ import Constants from "expo-constants";
 import { File, Paths } from "expo-file-system";
 import { useFocusEffect } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
     ActivityIndicator,
     Pressable,
@@ -15,13 +15,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Border, Colors, Radius, Shadows, Spacing, Typography } from "@/constants/theme";
+import { Border, Radius, Shadows, Spacing, Typography, type Palette } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 
 const DB_NAME = "codevault.db";
 // Soft budget used only to render the storage bar proportionally.
 const STORAGE_BUDGET_BYTES = 100 * 1024 * 1024;
 
-type ThemeMode = "light" | "dark";
 type DbTask = "vacuum" | "analyze" | null;
 
 const formatBytes = (bytes: number) => {
@@ -43,8 +43,9 @@ const getDatabaseSize = () => {
 
 const Settings = () => {
     const db = useSQLiteContext();
+    const { mode, colors: Colors, setMode } = useTheme();
+    const styles = useMemo(() => makeStyles(Colors), [Colors]);
 
-    const [theme, setTheme] = useState<ThemeMode>("light");
     const [openAiKey, setOpenAiKey] = useState("");
     const [anthropicKey, setAnthropicKey] = useState("");
     const [showOpenAi, setShowOpenAi] = useState(false);
@@ -106,14 +107,14 @@ const Settings = () => {
                         </View>
                         <View style={styles.themeToggle}>
                             <Pressable
-                                style={[styles.themeButton, theme === "light" && styles.themeButtonActive]}
-                                onPress={() => setTheme("light")}
+                                style={[styles.themeButton, mode === "light" && styles.themeButtonActive]}
+                                onPress={() => setMode("light")}
                             >
                                 <Ionicons name="sunny" size={20} color={Colors.onSurface} />
                             </Pressable>
                             <Pressable
-                                style={[styles.themeButton, theme === "dark" && styles.themeButtonActive]}
-                                onPress={() => setTheme("dark")}
+                                style={[styles.themeButton, mode === "dark" && styles.themeButtonActive]}
+                                onPress={() => setMode("dark")}
                             >
                                 <Ionicons name="moon" size={20} color={Colors.onSurface} />
                             </Pressable>
@@ -262,7 +263,7 @@ const Settings = () => {
 
 export default Settings;
 
-const styles = StyleSheet.create({
+const makeStyles = (Colors: Palette) => StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Colors.background,
