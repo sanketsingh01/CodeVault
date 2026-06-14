@@ -1,56 +1,68 @@
-# Welcome to your Expo app 👋
+# CodeVault
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+CodeVault is a mobile code-snippet manager built with Expo and React Native. It lets you save snippets, organize tags, attach screenshots, switch themes, and use AI actions to explain, summarize, or improve saved code.
 
-## Get started
+## Screens
 
-1. Install dependencies
+| Onboarding | Home | Create Snippet |
+| :---: | :---: | :---: |
+| <img src="./assets/images/onBoarding.jpeg" width="220" alt="CodeVault onboarding screen" /> | <img src="./assets/images/home.jpeg" width="220" alt="CodeVault home screen" /> | <img src="./assets/images/createSnippet.jpeg" width="220" alt="Create snippet screen" /> |
 
-   ```bash
-   npm install
-   ```
+| Snippet Details | Files | Settings |
+| :---: | :---: | :---: |
+| <img src="./assets/images/snippetScreen.jpeg" width="220" alt="Snippet details screen" /> | <img src="./assets/images/filesScreen.jpeg" width="220" alt="Files screen" /> | <img src="./assets/images/SettingScreen.jpeg" width="220" alt="Settings screen" /> |
 
-2. Start the app
+| Dark Mode |
+| :---: |
+| <img src="./assets/images/DarkMode.jpeg" width="220" alt="CodeVault dark mode screen" /> |
 
-   ```bash
-   npx expo start
-   ```
+## Features
 
-In the output, you'll find options to open the app in a
+- Save code snippets with title, language, tags, and optional screenshots.
+- Browse recent snippets from the home screen.
+- View snippet details with syntax highlighting.
+- Run AI actions for explain, summarize, and improve using your OpenAI API key.
+- Store API keys locally with Expo SecureStore.
+- Track attached files and screenshots from the Files tab.
+- Switch between light and dark themes.
+- Maintain the local SQLite database with vacuum and analyze actions.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Tech Stack
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- Expo SDK 56
+- React Native 0.85
+- Expo Router
+- Expo SQLite
+- Expo SecureStore
+- Expo Image Picker and Expo Image
+- TypeScript
 
-## Get a fresh project
+## Getting Started
 
-When you're ready, run:
+Install dependencies:
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Start the development server:
 
-### Other setup steps
+```bash
+npx expo start
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+Then scan the QR code with Expo Go, or press `a` / `i` in the terminal to open Android or iOS.
 
-## Learn more
+## Project Structure
 
-To learn more about developing your project with Expo, look at the following resources:
+```text
+src/
++-- app/          # Expo Router screens and tabs
++-- components/   # Reusable UI components
++-- constants/    # Theme tokens
++-- context/      # Theme provider
++-- db/           # SQLite migration setup
++-- services/     # AI service helpers
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+assets/images/    # App icons and README screenshots
+```
