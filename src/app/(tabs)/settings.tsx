@@ -3,7 +3,7 @@ import Constants from "expo-constants";
 import { File, Paths } from "expo-file-system";
 import { useFocusEffect } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
     ActivityIndicator,
     Pressable,
@@ -17,6 +17,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Border, Radius, Shadows, Spacing, Typography, type Palette } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
+
+import * as SecureStore from "expo-secure-store";
 
 const DB_NAME = "codevault.db";
 // Soft budget used only to render the storage bar proportionally.
@@ -47,9 +49,11 @@ const Settings = () => {
     const styles = useMemo(() => makeStyles(Colors), [Colors]);
 
     const [openAiKey, setOpenAiKey] = useState("");
-    const [anthropicKey, setAnthropicKey] = useState("");
+    // const [anthropicKey, setAnthropicKey] = useState("");
     const [showOpenAi, setShowOpenAi] = useState(false);
-    const [showAnthropic, setShowAnthropic] = useState(false);
+    // const [showAnthropic, setShowAnthropic] = useState(false);
+    const [savingOpenAiKey, setSavingOpenAiKey] = useState(false);
+    const [apiStatus, setApiStatus] = useState<string | null>(null);
 
     const [dbSize, setDbSize] = useState(0);
     const [busy, setBusy] = useState<DbTask>(null);
@@ -79,6 +83,47 @@ const Settings = () => {
             );
         } finally {
             setBusy(null);
+        }
+    };
+
+    useEffect(() => {
+        let isMounted = true;
+
+        async function loadOpenAiKey() {
+            try {
+                const key = await SecureStore.getItemAsync("openai_key");
+                if (isMounted && key) setOpenAiKey(key);
+            } catch (error) {
+                if (isMounted) {
+                    setApiStatus(
+                        error instanceof Error ? error.message : "Could not load OpenAI key."
+                    );
+                }
+            }
+        };
+
+        loadOpenAiKey();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    const handleOpenAiKeySave = async () => {
+        if (savingOpenAiKey) return;
+
+        setSavingOpenAiKey(true);
+        setApiStatus(null);
+        try {
+            await SecureStore.setItemAsync("openai_key", openAiKey.trim());
+            setOpenAiKey(openAiKey.trim());
+            setApiStatus("OpenAI key saved.");
+        } catch (error) {
+            setApiStatus(
+                error instanceof Error ? error.message : "Could not save OpenAI key."
+            );
+        } finally {
+            setSavingOpenAiKey(false);
         }
     };
 
@@ -160,7 +205,26 @@ const Settings = () => {
                         </View>
                     </View>
 
-                    <View style={styles.field}>
+                    {/* Button to add a key or update existing key */}
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.apiButton,
+                            pressed && styles.apiButtonPressed,
+                            (!openAiKey || savingOpenAiKey) && styles.apiButtonDisabled,
+                        ]}
+                        onPress={handleOpenAiKeySave}
+                        disabled={!openAiKey || savingOpenAiKey}
+                    >
+                        {savingOpenAiKey ? (
+                            <ActivityIndicator size="small" color={Colors.onSurface} />
+                        ) : (
+                            <Text style={styles.apiButtonText}>Save</Text>
+                        )}
+                    </Pressable>
+
+                    {apiStatus && <Text style={styles.apiStatusText}>{apiStatus}</Text>}
+
+                    {/* <View style={styles.field}>
                         <Text style={styles.fieldLabel}>Anthropic Key</Text>
                         <View style={styles.inputRow}>
                             <TextInput
@@ -184,7 +248,7 @@ const Settings = () => {
                                 />
                             </Pressable>
                         </View>
-                    </View>
+                    </View> */}
 
                     <Text style={styles.apiNote}>
                         Keys are stored locally on this device.
@@ -390,6 +454,36 @@ const makeStyles = (Colors: Palette) => StyleSheet.create({
     },
     eyeButton: {
         padding: Spacing.base - 4,
+    },
+    apiButton: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: Spacing.base,
+        paddingVertical: Spacing.innerPadding,
+        borderRadius: Radius.md,
+        borderWidth: Border.default,
+        borderColor: Colors.outlineBlack,
+        backgroundColor: Colors.surfaceContainerLowest,
+        ...Shadows.sticker,
+    },
+    apiButtonPressed: {
+        transform: [{ translateX: 2 }, { translateY: 2 }],
+        ...Shadows.pressed,
+    },
+    apiButtonDisabled: {
+        opacity: 0.6,
+    },
+    apiButtonText: {
+        ...Typography.bodyMd,
+        textTransform: "none",
+        color: Colors.onSurface
+    },
+    apiStatusText: {
+        ...Typography.bodyMd,
+        fontSize: 13,
+        color: Colors.onSurface,
     },
     apiNote: {
         ...Typography.bodyMd,

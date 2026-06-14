@@ -14,6 +14,9 @@ import { useTheme } from "@/context/ThemeContext";
 import { buildJson, buildMarkdown, buildTxt, getLanguageStyle, parseTags, type Snippet } from "@/data/snippetsData";
 import { useFocusEffect } from "expo-router";
 
+import * as SecureStore from "expo-secure-store";
+
+import { AiError, explainCode } from "@/services/ai";
 import SyntaxHighlighter from "react-native-syntax-highlighter";
 import atomOneDark from "react-syntax-highlighter/styles/hljs/atom-one-dark";
 import githubStyle from "react-syntax-highlighter/styles/hljs/github";
@@ -36,10 +39,10 @@ const EXPORT_ACTIONS: {
     mimeType: string;
     uti: string;
 }[] = [
-    { key: "txt", label: ".txt", icon: "document-text", ext: "txt", mimeType: "text/plain", uti: "public.plain-text" },
-    { key: "markdown", label: "Markdown", icon: "logo-markdown", ext: "md", mimeType: "text/markdown", uti: "net.daringfireball.markdown" },
-    { key: "json", label: "JSON", icon: "code-slash", ext: "json", mimeType: "application/json", uti: "public.json" },
-];
+        { key: "txt", label: ".txt", icon: "document-text", ext: "txt", mimeType: "text/plain", uti: "public.plain-text" },
+        { key: "markdown", label: "Markdown", icon: "logo-markdown", ext: "md", mimeType: "text/markdown", uti: "net.daringfireball.markdown" },
+        { key: "json", label: "JSON", icon: "code-slash", ext: "json", mimeType: "application/json", uti: "public.json" },
+    ];
 
 const buildExportContent = (format: ExportFormat, snippet: Snippet) => {
     if (format === "txt") return buildTxt(snippet);
@@ -60,6 +63,9 @@ const SnippetDetail = () => {
     const [saving, setSaving] = useState(false);
     const [editing, setEditing] = useState(false);
     const [exporting, setExporting] = useState<ExportFormat | null>(null);
+    const [aiLoading, setAiLoading] = useState<string | null>(null);
+    const [aiResult, setAiResult] = useState<string>("");
+    const [aiError, setAiError] = useState<string | null>(null);
 
     const loadSnippet = useCallback(async () => {
         const row = await db.getFirstAsync<Snippet>(
@@ -138,6 +144,46 @@ const SnippetDetail = () => {
             );
         } finally {
             setExporting(null);
+        }
+    };
+
+    const runAi = async (action: (typeof AI_ACTIONS)[number]) => {
+        if (!snippet || aiLoading) return;
+
+        const apiKey = await SecureStore.getItemAsync("openai_key");
+        if (!apiKey) {
+            setAiResult("");
+            setAiError("No API key found. Add your OpenAI key in Settings.");
+            return;
+        }
+
+        setAiLoading(action.key);
+        setAiError(null);
+        setAiResult("");
+        try {
+            const result = await explainCode({
+                apiKey,
+                code,
+                language: snippet.language,
+                action: action.key as "explain" | "summarize" | "improve",
+            });
+            setAiResult(result);
+
+            // Optional: cache into your ai_explanations table
+            // await db.runAsync(
+            //   "INSERT INTO ai_explanations (snippet_id, explanation) VALUES (?, ?)",
+            //   [snippet.id, result]
+            // );
+        } catch (e) {
+            setAiError(
+                e instanceof AiError
+                    ? e.kind === "insufficient_quota"
+                        ? "Out of credits — your OpenAI account has no remaining quota."
+                        : e.message
+                    : "Something went wrong."
+            );
+        } finally {
+            setAiLoading(null);
         }
     };
 
@@ -298,21 +344,40 @@ const SnippetDetail = () => {
                 <Text style={styles.sectionTitle}>AI Actions</Text>
                 <View style={styles.actionRow}>
                     {AI_ACTIONS.map((action) => (
-                        <View
+                        <Pressable
                             key={action.key}
-                            style={[styles.actionButton, { backgroundColor: Colors[action.bg] }]}
+                            style={({ pressed }) => [
+                                styles.actionButton,
+                                { backgroundColor: Colors[action.bg] },
+                                aiLoading !== null && styles.exportButtonDisabled,
+                                pressed && styles.exportButtonPressed,
+                            ]}
+                            onPress={() => runAi(action)}
+                            disabled={aiLoading !== null}
                         >
-                            <Ionicons name={action.icon} size={18} color={Colors.onSurface} />
+                            {aiLoading === action.key ? (
+                                <ActivityIndicator size="small" color={Colors.onSurface} />
+                            ) : (
+                                <Ionicons name={action.icon} size={18} color={Colors.onSurface} />
+                            )}
                             <Text style={styles.actionText}>{action.label}</Text>
-                        </View>
+                        </Pressable>
                     ))}
                 </View>
 
                 {/* AI explanation placeholder */}
-                <View style={styles.explanationBox}>
-                    <Ionicons name="sparkles-outline" size={20} color={Colors.onTertiaryContainer} />
+                <View style={[styles.explanationBox, aiError && styles.explanationBoxError]}>
+                    <Ionicons
+                        name={aiError ? "warning-outline" : "sparkles-outline"}
+                        size={20}
+                        color={Colors.onTertiaryContainer}
+                    />
                     <Text style={styles.explanationText}>
-                        AI explanation will appear here. Coming soon.
+                        {aiLoading
+                            ? "Thinking..."
+                            : aiError
+                                ? aiError
+                                : aiResult || "Tap an AI action above to analyze this snippet."}
                     </Text>
                 </View>
 
@@ -545,6 +610,9 @@ const makeStyles = (Colors: Palette) => StyleSheet.create({
         borderWidth: Border.default,
         borderColor: Colors.outlineBlack,
         backgroundColor: Colors.tertiaryFixed,
+    },
+    explanationBoxError: {
+        borderColor: Colors.error,
     },
     explanationText: {
         ...Typography.bodyMd,
