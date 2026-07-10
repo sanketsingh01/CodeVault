@@ -3,8 +3,8 @@ import { JetBrainsMono_500Medium } from "@expo-google-fonts/jetbrains-mono";
 import { WorkSans_400Regular, WorkSans_600SemiBold } from "@expo-google-fonts/work-sans";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
@@ -30,7 +30,7 @@ function AppShell({ fontsLoaded }: { fontsLoaded: boolean }) {
 
   return (
     <>
-      <StatusBar style={mode === "dark" ? "light" : "dark"} />
+      <StatusBar style={mode === "dark" ? "light" : "light"} />
       <SQLiteProvider databaseName="codevault.db" onInit={migrateDbIfNeeded}>
         <Stack
           screenOptions={{
